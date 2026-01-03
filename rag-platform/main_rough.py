@@ -10,7 +10,7 @@ Basic first idea of the flow
 '''
 import pymupdf
 from langchain_community.llms import LlamaCpp
-from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
 from langchain_classic.chains.retrieval_qa.base import RetrievalQA
@@ -41,7 +41,7 @@ template = """<|user|>
 Relevant information:
 {context}
 
-Provide a concise answer the following question using the relevant information provided above:
+You must answer using only the information in the context. If the answer is not present, say "I don't know".:
 {question}<|end|>
 <|assistant|>"""
 prompt = PromptTemplate(
@@ -71,8 +71,12 @@ rag = RetrievalQA.from_chain_type(
     }
 )
 
+results = db.similarity_search("What year was this document published?", k=3)
+for idx, chunks in enumerate(results):
+    print(f'{idx}: {chunks}')
+
 print("Invoking RAG model")
-response = rag.invoke('What is lie algebra')
-print('Question: What is lie algebra?')
+response = rag.invoke('What year was this document published?')
+print('Question: What year was this document published?')
 reply = response['result']
 print(f'Answer: {reply}')
