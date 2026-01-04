@@ -5,21 +5,14 @@ from langchain_core.prompts import PromptTemplate
 
 class PromptSetUp:
     def __init__(self):
-        self.template = """Answer the question using only the context below.
-            Respond with a single, concise answer.
-            If the answer is not present, respond exactly with: I don't know.
-
-            Context:
-            {context}
-
-            Question:
-            {question}
-
-            Answer:"""
+        self.template = (
+            "Answer the question using only the context below.\n"
+            "If the answer is not present, respond exactly with: I don't know.\n"
+            "Respond with a single concise answer.\n\n"
+            "Context:\n{context}\n\n"
+            "Question:\n{question}\n\n"
+            "Answer:"
+        )
         
     def generate_prompt(self):
-        self.prompt = PromptTemplate(
-            template = self.template,
-            input_variables = ["context", "question"]
-        )
-        return self.prompt
+        return self.template

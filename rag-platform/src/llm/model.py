@@ -13,9 +13,9 @@ class LLM:
         llm_model = LlamaCpp(
             model_path = model_path,
             n_gpu_layers = -1,
-            max_tokens = 200,
+            max_tokens = 150,
             n_ctx = 2048,
-            seed = 42,
+            temperature=0.0,
             verbose = False,
             stop=["\n\n", "Question:", "Context:"],
         )

@@ -6,6 +6,7 @@ from ingestion.chunker import TextChunker
 from llm.model import LLM
 from llm.prompt import PromptSetUp
 from retrieval.retriever import Retriever
+from retrieval.manual_rag import ManualRAG
 
 llm_model_path = '/home/ankur/Documents/Multi-Node-RAG-LLM-platform/rag-platform/qwen2.5-3b-instruct-q4_k_m.gguf'
 document_path = '/home/ankur/Documents/posted_ila_2017-09-13.pdf'
@@ -35,13 +36,20 @@ def main():
 
     llm_model = llm.llm_model
 
-    rag_setup = Retriever(llm_model, vector_db, prompt)
+    # rag_setup = Retriever(llm_model, vector_db, prompt)
+
+    rag = ManualRAG(llm=llm_model,
+                    vector_db=vector_db,
+                    prompt_template=prompt,
+                    top_k=2)
 
     query = input("Enter the query to be asked: \n")
 
-    rag_setup.invoke_retievalQA(query)
+    # rag_setup.invoke_retievalQA(query)
 
     # rag_setup.get_similarity(query, 5)
+
+    rag.generate(query)
 
 if __name__ == "__main__":
     main()
