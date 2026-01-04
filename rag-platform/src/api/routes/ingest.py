@@ -8,6 +8,9 @@ from llm.prompt import PromptSetUp
 from retrieval.manual_rag import ManualRAG
 from state.app_state import state
 
+if state.llm is None:
+    state.llm = LLM().llm_model
+
 router = APIRouter(prefix="/ingest")
 
 @router.post("")
@@ -21,14 +24,13 @@ def ingest(file_path: str):
     embedder = TextEmbedder()
     vector_db = embedder.create_embedding(text_chunks)
 
-    llm = LLM('/home/ankur/Documents/Multi-Node-RAG-LLM-platform/rag-platform/qwen2.5-3b-instruct-q4_k_m.gguf')
-    llm_model = llm.llm_model
-
+    # llm = LLM('/home/ankur/Documents/Multi-Node-RAG-LLM-platform/rag-platform/qwen2.5-3b-instruct-q4_k_m.gguf')
+    # llm_model = llm.llm_model
+    
     prompter = PromptSetUp()
     prompt = prompter.generate_prompt()
 
-    state.llm = llm_model
     state.vector_db = vector_db
-    state.rag = ManualRAG(llm_model, vector_db, prompt)
+    state.rag = ManualRAG(state.llm, vector_db, prompt)
 
     return {"status": "ingested", "chunks": len(text_chunks)}

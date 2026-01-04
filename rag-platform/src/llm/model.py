@@ -1,10 +1,14 @@
 # Load and configure the LLM runtime
-
+import os
 from time import time
 from langchain_community.llms import LlamaCpp
 
 class LLM:
-    def __init__(self, model_path):
+    def __init__(self):
+        model_path = os.getenv("MODEL_PATH")
+        if not model_path:
+            raise RuntimeError("MODEL_PATH env variable not set")
+        
         self.llm_model = self.load_llm_model(model_path)
 
     def load_llm_model(self, model_path):
