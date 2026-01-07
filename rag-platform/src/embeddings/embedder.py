@@ -7,7 +7,7 @@ from langchain_community.vectorstores import FAISS
 class TextEmbedder:
     def __init__(self):
         self.embedding_model = HuggingFaceEmbeddings(
-            model_name = 'thenlper/gte-small'
+            model_name = '/data/hf-models/gte-small'
         )
 
     def create_embedding(self, texts):
