@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-api
+  namespace: rag-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rag-api
+  template:
+    metadata:
+      labels:
+        app: rag-api
+    spec:
+      nodeSelector:
+        rag-role: edge
+      containers:
+      - name: rag-api
+        image: rag-platform:v0.4
+        imagePullPolicy: Never
+        command:
+        - uvicorn
+        - api.main:app
+        args:
+        - --host
+        - "0.0.0.0"
+        - --port
+        - "8000"
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: pdf-data
+          mountPath: /data
+        - name: gguf-model
+          mountPath: /models
+        - name: hf-models
+          mountPath: /hf-models
+        env:
+        - name: RAG_BACKEND_URL
+          value: http://rag-inference
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+      volumes:
+      - name: pdf-data
+        hostPath:
+          path: /home/ankur-pi/Documents/pdfs
+          type: DirectoryOrCreate
+      - name: gguf-model
+        hostPath:
+          path: /home/ankur-pi/models
+          type: DirectoryOrCreate
+      - name: hf-models
+        hostPath:
+          path: /home/ankur-pi/Documents/hf-models
+          type: DirectoryOrCreate
