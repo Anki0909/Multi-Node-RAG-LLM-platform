@@ -17,7 +17,7 @@ spec:
         rag-role: compute
       containers:
         - name: rag-inference
-          image: rag-platform:v0.3
+          image: rag-inference:v0.5-amd64
           imagePullPolicy: Never
           ports:
             - containerPort: 8000

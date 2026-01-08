@@ -1,0 +1,27 @@
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y \
+    build-essential curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m appuser
+WORKDIR /app
+RUN chown -R appuser:appuser /app
+
+COPY rag-platform/docker-requirement.txt /app/requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY rag-platform/src /app/src
+ENV PYTHONPATH=/app/src
+
+# Runtime config
+ENV HF_HOME=/data/hf-models
+ENV PDF_BASE_PATH=/data/pdfs
+ENV VECTOR_DB_PATH=/data/vector-db
+ENV RAG_BACKEND_URL=http://rag-inference
+
+USER appuser
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

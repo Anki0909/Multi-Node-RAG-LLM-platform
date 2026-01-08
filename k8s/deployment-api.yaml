@@ -17,7 +17,7 @@ spec:
         rag-role: edge
       containers:
       - name: rag-api
-        image: rag-platform:v0.4
+        image: rag-api:v0.5-arm64
         imagePullPolicy: Never
         command:
         - uvicorn
