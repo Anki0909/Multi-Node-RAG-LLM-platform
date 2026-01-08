@@ -8,7 +8,4 @@ if [ ! -f "$MODEL_PATH" ]; then
     exit 1
 fi
 
-exec uvicorn api.main:app \
-    --host ${HOST} \
-    --port ${PORT} \
-    --workers 1
+exec uvicorn main:app --host 0.0.0.0 --port 8000

@@ -42,11 +42,11 @@ spec:
         - name: PDF_BASE_PATH
           value: /data/pdfs
         - name: HF_HOME
-          value: /data/hf-cache
+          value: /data/hf-models
         - name: TRANSFORMERS_CACHE
-          value: /data/hf-cache
+          value: /data/hf-models
         - name: SENTENCE_TRANSFORMERS_HOME
-          value: /data/hf-cache
+          value: /data/hf-models
         resources:
           requests:
             cpu: "500m"

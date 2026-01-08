@@ -4,16 +4,13 @@ from time import time
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
-HF_MODEL_PATH = "/data/hf-models/gte-small"
+HF_HOME = os.getenv("HF_HOME", "/data/hf-models")
 
 class TextEmbedder:
     def __init__(self):
-        if not os.path.exists(HF_MODEL_PATH):
-            raise RuntimeError(f"HF model not found at {HF_MODEL_PATH}")
-
         self.embedding_model = HuggingFaceEmbeddings(
-            model_name=HF_MODEL_PATH,
-            cache_folder=HF_MODEL_PATH
+            model_name="thenlper/gte-small",
+            cache_folder=HF_HOME
         )
 
     def create_embedding(self, texts):

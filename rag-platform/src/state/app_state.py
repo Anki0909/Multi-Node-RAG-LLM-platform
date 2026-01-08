@@ -1,8 +1,8 @@
-# Avoid reloading model per request
-
 class AppState:
-    llm = None
-    vector_db = None
-    rag = None
+    def __init__(self):
+        self.llm = None
+        self.embedder = None
+        self.vector_db = None
+        self.rag = None
 
 state = AppState()
