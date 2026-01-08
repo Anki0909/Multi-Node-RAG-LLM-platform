@@ -49,13 +49,13 @@ spec:
       volumes:
       - name: pdf-data
         hostPath:
-          path: /home/ankur-pi/Documents/pdfs
+          path: /mnt/data/pdfs
           type: DirectoryOrCreate
       - name: gguf-model
         hostPath:
-          path: /home/ankur-pi/models
+          path: /mnt/data/llm-models
           type: DirectoryOrCreate
       - name: hf-models
         hostPath:
-          path: /home/ankur-pi/Documents/hf-models
+          path: /mnt/data/hf-models
           type: DirectoryOrCreate
