@@ -41,6 +41,12 @@ spec:
           value: /data/hf-models/gte-small
         - name: PDF_BASE_PATH
           value: /data/pdfs
+        - name: HF_HOME
+          value: /data/hf-cache
+        - name: TRANSFORMERS_CACHE
+          value: /data/hf-cache
+        - name: SENTENCE_TRANSFORMERS_HOME
+          value: /data/hf-cache
         resources:
           requests:
             cpu: "500m"
