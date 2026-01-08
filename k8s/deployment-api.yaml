@@ -30,15 +30,17 @@ spec:
         ports:
         - containerPort: 8000
         volumeMounts:
-        - name: pdf-data
+        - name: data
           mountPath: /data
-        - name: gguf-model
-          mountPath: /models
-        - name: hf-models
-          mountPath: /hf-models
         env:
         - name: RAG_BACKEND_URL
           value: http://rag-inference
+        - name: MODEL_PATH
+          value: /data/llm-models/model.gguf
+        - name: HF_MODEL_PATH
+          value: /data/hf-models/gte-small
+        - name: PDF_BASE_PATH
+          value: /data/pdfs
         resources:
           requests:
             cpu: "500m"
@@ -47,15 +49,7 @@ spec:
             cpu: "1"
             memory: "1Gi"
       volumes:
-      - name: pdf-data
+      - name: data
         hostPath:
-          path: /mnt/data/pdfs
-          type: DirectoryOrCreate
-      - name: gguf-model
-        hostPath:
-          path: /mnt/data/llm-models
-          type: DirectoryOrCreate
-      - name: hf-models
-        hostPath:
-          path: /mnt/data/hf-models
-          type: DirectoryOrCreate
+          path: /mnt/data
+          type: Directory

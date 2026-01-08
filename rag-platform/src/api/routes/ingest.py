@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-
+import os
 from ingestion.loader import FileLoader
 from ingestion.chunker import TextChunker
 from embeddings.embedder import TextEmbedder
@@ -15,7 +15,9 @@ router = APIRouter(prefix="/ingest")
 
 @router.post("")
 def ingest(file_path: str):
-    file_pharser = FileLoader(file_path)
+    PDF_BASE_PATH = os.getenv("PDF_BASE_PATH", "/data/pdfs")
+    pdf_full_path = os.path.join(PDF_BASE_PATH, file_path)
+    file_pharser = FileLoader(pdf_full_path)
     texts = file_pharser.read_file()['file_content']
 
     text_chunker = TextChunker(chunk_size=500, chunk_overlap=100)

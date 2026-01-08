@@ -5,7 +5,7 @@ from langchain_community.llms import LlamaCpp
 
 class LLM:
     def __init__(self):
-        model_path = os.getenv("MODEL_PATH")
+        model_path = os.getenv("MODEL_PATH", "/data/llm-models/model.gguf")
         if not model_path:
             raise RuntimeError("MODEL_PATH env variable not set")
         
