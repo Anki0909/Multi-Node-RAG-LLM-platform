@@ -5,6 +5,7 @@ metadata:
   namespace: rag-platform
 spec:
   replicas: 1
+  restartPolicy: Always
   selector:
     matchLabels:
       app: rag-api
@@ -47,6 +48,10 @@ spec:
           value: /data/hf-models
         - name: SENTENCE_TRANSFORMERS_HOME
           value: /data/hf-models
+        - name: TRANSFORMERS_OFFLINE
+          value: "1"
+        - name: HF_HUB_OFFLINE
+          value: "1"
         resources:
           requests:
             cpu: "500m"
