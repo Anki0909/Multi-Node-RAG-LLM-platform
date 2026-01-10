@@ -1,17 +1,15 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from state.app_state import state
-from llm.model import LLM
-from embeddings.embedder import TextEmbedder
+import asyncio
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # state.llm = LLM().llm_model
-    # state.embedder = TextEmbedder()
     yield
-    # optional cleanup
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="RAG Platform – API",
+    lifespan=lifespan
+)
 
 from api.routes import ingest, query, health
 app.include_router(health.router)

@@ -19,14 +19,6 @@ spec:
       - name: rag-api
         image: rag-api:v0.5-arm64
         imagePullPolicy: Never
-        command:
-        - uvicorn
-        - api.main:app
-        args:
-        - --host
-        - "0.0.0.0"
-        - --port
-        - "8000"
         ports:
         - containerPort: 8000
         volumeMounts:
