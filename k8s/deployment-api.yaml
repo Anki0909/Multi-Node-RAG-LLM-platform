@@ -19,6 +19,8 @@ spec:
       - name: rag-api
         image: rag-api:v0.5-arm64
         imagePullPolicy: Never
+        command: ["uvicorn"]
+        args: ["api.main_ingest:app", "--host", "0.0.0.0", "--port", "8000"]
         ports:
         - containerPort: 8000
         volumeMounts:
@@ -47,8 +49,6 @@ spec:
           value: "1"
         - name: HF_HUB_OFFLINE
           value: "1"
-        - name: VECTOR_DB_PATH
-          value: /data/vector-db
         resources:
           requests:
             cpu: "500m"
@@ -63,6 +63,3 @@ spec:
       - name: pdfs
         persistentVolumeClaim:
           claimName: pdfs-pvc
-      - name: vector-db
-        persistentVolumeClaim:
-          claimName: vector-db-pvc

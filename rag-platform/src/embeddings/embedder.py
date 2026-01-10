@@ -1,18 +1,25 @@
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
+from vectorstore.chroma_client import get_chroma_client
 import os
 
 class TextEmbedder:
     def __init__(self):
+        model_path = os.getenv("HF_MODEL_PATH")
         self.embedding_model = HuggingFaceEmbeddings(
-            model_name=os.getenv("HF_MODEL_PATH", "thenlper/gte-small")
+            model_name=model_path
         )
 
-        self.persist_dir = os.getenv("VECTOR_DB_PATH", "/data/vector-db")
+    def ingest(self, texts, collection_name="documents"):
+        chroma_client = get_chroma_client()
 
-    def get_vector_store(self):
-        return Chroma(
-            collection_name="rag",
-            embedding_function=self.embedding_model,
-            persist_directory=self.persist_dir
+        vectordb = Chroma(
+            client=chroma_client,
+            collection_name=collection_name,
+            embedding_function=self.embedding_model
         )
+
+        vectordb.add_texts(texts)
+        vectordb.persist()
+
+        return vectordb

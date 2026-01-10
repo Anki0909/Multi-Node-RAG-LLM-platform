@@ -1,30 +1,36 @@
 from fastapi import APIRouter, HTTPException
 from api.schemas import QueryRequest, QueryResponse
 
-from llm.model import LLM
+from langchain_chroma import Chroma
+from vectorstore.chroma_client import get_chroma_client
 from llm.prompt import PromptSetUp
-from retrieval.manual_rag import ManualRAG
-from embeddings.embedder import TextEmbedder
 from state.app_state import state
-from vectorstore.loader import load_vector_db
 
 router = APIRouter(prefix="/query")
-
-
 
 @router.post("", response_model=QueryResponse)
 def query(req: QueryRequest):
 
-    embedder = TextEmbedder()
-    vector_db = embedder.get_vector_store()
+    if state.llm is None:
+        raise HTTPException(status_code=500, detail="LLM not initialized")
+
+    chroma_client = get_chroma_client()
+
+    vector_db = Chroma(
+        client=chroma_client,
+        collection_name="documents",
+        embedding_function=None
+    )
+
+    docs = vector_db.similarity_search(req.query, k=4)
+    context = "\n".join(d.page_content for d in docs)
 
     prompter = PromptSetUp()
-    prompt = prompter.generate_prompt()
+    prompt = prompter.generate_prompt(context=context, question=req.query)
 
-    llm = LLM().llm_model
+    answer = state.llm(prompt)
 
-    rag = ManualRAG(llm, vector_db, prompt)
-
-    answer = rag.generate(req.query)
-
-    return {"query": req.query, "answer": answer}
+    return {
+        "query": req.query,
+        "answer": answer
+    }

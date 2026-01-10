@@ -6,6 +6,8 @@ langchain
 langchain-community
 langchain-huggingface
 llama_cpp_python
+chromadb>=0.4.22
+langchain-chroma
 
 sentence-transformers
 faiss-cpu

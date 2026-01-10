@@ -14,11 +14,13 @@ spec:
         app: rag-inference
     spec:
       nodeSelector:
-        rag-role: compute
+        rag-role: inference
       containers:
         - name: rag-inference
           image: rag-inference:v0.5-amd64
           imagePullPolicy: Never
+          command: ["uvicorn"]
+          args: ["api.main_inference:app", "--host", "0.0.0.0", "--port", "8000"]
           ports:
             - containerPort: 8000
           envFrom:

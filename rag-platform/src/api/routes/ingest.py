@@ -4,7 +4,6 @@ import os
 from ingestion.loader import FileLoader
 from ingestion.chunker import TextChunker
 from embeddings.embedder import TextEmbedder
-from state.app_state import state
 
 router = APIRouter(prefix="/ingest")
 
@@ -20,9 +19,6 @@ def ingest(file_path: str):
     text_chunks = text_chunker.chunk(texts)
 
     embedder = TextEmbedder()
-    vector_db = embedder.get_vector_store()
-
-    vector_db.add_texts(text_chunks)
-    vector_db.persist()
+    embedder.ingest(text_chunks)
 
     return {"status": "ingested", "chunks": len(text_chunks)}
