@@ -26,6 +26,8 @@ spec:
           mountPath: /data/hf-models
         - name: pdfs
           mountPath: /data/pdfs
+        - name: vector-db
+          mountPath: /data/vector-db
         env:
         - name: RAG_BACKEND_URL
           value: http://rag-inference
@@ -45,6 +47,8 @@ spec:
           value: "1"
         - name: HF_HUB_OFFLINE
           value: "1"
+        - name: VECTOR_DB_PATH
+          value: /data/vector-db
         resources:
           requests:
             cpu: "500m"
@@ -59,3 +63,6 @@ spec:
       - name: pdfs
         persistentVolumeClaim:
           claimName: pdfs-pvc
+      - name: vector-db
+        persistentVolumeClaim:
+          claimName: vector-db-pvc

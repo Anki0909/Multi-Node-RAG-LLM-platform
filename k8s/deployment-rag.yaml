@@ -34,7 +34,15 @@ spec:
           volumeMounts:
             - name: llm-models
               mountPath: /models
+            - name: vector-db
+              mountPath: /data/vector-db
+          env:
+            - name: VECTOR_DB_PATH
+              value: /data/vector-db
       volumes:
         - name: llm-models
           persistentVolumeClaim:
             claimName: llm-models-pvc
+        - name: vector-db
+          persistentVolumeClaim:
+            claimName: vector-db-pvc
