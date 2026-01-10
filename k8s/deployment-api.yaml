@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-api
+  namespace: rag-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rag-api
+  template:
+    metadata:
+      labels:
+        app: rag-api
+    spec:
+      nodeSelector:
+        rag-role: edge
+      containers:
+      - name: rag-api
+        image: rag-api:v0.5-arm64
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: hf-models
+          mountPath: /data/hf-models
+        - name: pdfs
+          mountPath: /data/pdfs
+        env:
+        - name: RAG_BACKEND_URL
+          value: http://rag-inference
+        - name: MODEL_PATH
+          value: /data/llm-models/model.gguf
+        - name: HF_MODEL_PATH
+          value: /data/hf-models/gte-small
+        - name: PDF_BASE_PATH
+          value: /data/pdfs
+        - name: HF_HOME
+          value: /data/hf-models
+        - name: TRANSFORMERS_CACHE
+          value: /data/hf-models
+        - name: SENTENCE_TRANSFORMERS_HOME
+          value: /data/hf-models
+        - name: TRANSFORMERS_OFFLINE
+          value: "1"
+        - name: HF_HUB_OFFLINE
+          value: "1"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+      volumes:
+      - name: hf-models
+        persistentVolumeClaim:
+          claimName: hf-models-pvc
+      - name: pdfs
+        persistentVolumeClaim:
+          claimName: pdfs-pvc
