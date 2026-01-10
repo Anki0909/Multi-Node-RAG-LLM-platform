@@ -5,7 +5,6 @@ metadata:
   namespace: rag-platform
 spec:
   replicas: 1
-  restartPolicy: Always
   selector:
     matchLabels:
       app: rag-api
@@ -31,8 +30,10 @@ spec:
         ports:
         - containerPort: 8000
         volumeMounts:
-        - name: data
-          mountPath: /data
+        - name: hf-models
+          mountPath: /data/hf-models
+        - name: pdfs
+          mountPath: /data/pdfs
         env:
         - name: RAG_BACKEND_URL
           value: http://rag-inference
@@ -60,7 +61,9 @@ spec:
             cpu: "1"
             memory: "1Gi"
       volumes:
-      - name: data
-        hostPath:
-          path: /mnt/data
-          type: Directory
+      - name: hf-models
+        persistentVolumeClaim:
+          claimName: hf-models-pvc
+      - name: pdfs
+        persistentVolumeClaim:
+          claimName: pdfs-pvc

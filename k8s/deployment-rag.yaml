@@ -32,14 +32,9 @@ spec:
               cpu: "4"
               memory: "8Gi"
           volumeMounts:
-            - name: model-volume
+            - name: llm-models
               mountPath: /models
-            - name: data-volume
-              mountPath: /data
       volumes:
-        - name: model-volume
-          hostPath:
-            path: /mnt/models
-        - name: data-volume
-          hostPath:
-            path: /mnt/data
+        - name: llm-models
+          persistentVolumeClaim:
+            claimName: llm-models-pvc

@@ -6,8 +6,8 @@ from embeddings.embedder import TextEmbedder
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    state.llm = LLM().llm_model
-    state.embedder = TextEmbedder()
+    # state.llm = LLM().llm_model
+    # state.embedder = TextEmbedder()
     yield
     # optional cleanup
 

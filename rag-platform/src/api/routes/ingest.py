@@ -3,16 +3,16 @@ import os
 
 from ingestion.loader import FileLoader
 from ingestion.chunker import TextChunker
-from llm.prompt import PromptSetUp
-from retrieval.manual_rag import ManualRAG
+# from llm.prompt import PromptSetUp
+# from retrieval.manual_rag import ManualRAG
 from state.app_state import state
 
 router = APIRouter(prefix="/ingest")
 
 @router.post("")
 def ingest(file_path: str):
-    if state.llm is None or state.embedder is None:
-        raise HTTPException(status_code=500, detail="Models not initialized")
+    # if state.llm is None or state.embedder is None:
+        # raise HTTPException(status_code=500, detail="Models not initialized")
 
     PDF_BASE_PATH = os.getenv("PDF_BASE_PATH", "/data/pdfs")
     pdf_full_path = os.path.join(PDF_BASE_PATH, file_path)
@@ -25,10 +25,11 @@ def ingest(file_path: str):
 
     vector_db = state.embedder.create_embedding(text_chunks)
 
-    prompter = PromptSetUp()
-    prompt = prompter.generate_prompt()
+    vector_db.save_local("/data/vector-db")
+    # prompter = PromptSetUp()
+    # prompt = prompter.generate_prompt()
 
-    state.vector_db = vector_db
-    state.rag = ManualRAG(state.llm, vector_db, prompt)
+    # state.vector_db = vector_db
+    # state.rag = ManualRAG(state.llm, vector_db, prompt)
 
     return {"status": "ingested", "chunks": len(text_chunks)}
