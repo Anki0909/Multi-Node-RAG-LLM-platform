@@ -28,15 +28,13 @@ spec:
           mountPath: /data/hf-models
         - name: pdfs
           mountPath: /data/pdfs
-        - name: vector-db
-          mountPath: /data/vector-db
         env:
         - name: RAG_BACKEND_URL
           value: http://rag-inference
         - name: MODEL_PATH
           value: /data/llm-models/model.gguf
-        - name: HF_MODEL_PATH
-          value: /data/hf-models/gte-small
+        - name: HF_MODEL_NAME
+          value: thenlper/gte-small
         - name: PDF_BASE_PATH
           value: /data/pdfs
         - name: HF_HOME

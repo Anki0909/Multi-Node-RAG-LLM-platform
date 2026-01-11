@@ -12,13 +12,19 @@ def ingest(file_path: str):
     PDF_BASE_PATH = os.getenv("PDF_BASE_PATH", "/data/pdfs")
     pdf_full_path = os.path.join(PDF_BASE_PATH, file_path)
 
-    file_parser = FileLoader(pdf_full_path)
-    texts = file_parser.read_file()["file_content"]
+    if not os.path.exists(pdf_full_path):
+        raise HTTPException(status_code=404, detail="PDF not found")
 
-    text_chunker = TextChunker(chunk_size=500, chunk_overlap=100)
-    text_chunks = text_chunker.chunk(texts)
+    loader = FileLoader(pdf_full_path)
+    texts = loader.read_file()["file_content"]
+
+    chunker = TextChunker(chunk_size=500, chunk_overlap=100)
+    chunks = chunker.chunk(texts)
 
     embedder = TextEmbedder()
-    embedder.ingest(text_chunks)
+    embedder.add_documents(chunks)
 
-    return {"status": "ingested", "chunks": len(text_chunks)}
+    return {
+        "status": "ingested",
+        "chunks": len(chunks)
+    }
