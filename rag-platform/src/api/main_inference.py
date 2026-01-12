@@ -1,20 +1,11 @@
 from fastapi import FastAPI
-from contextlib import asynccontextmanager
 from llm.model import LLM
-from state.app_state import state
+from api.routes import inference, health
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("Loading LLM model...")
-    state.llm = LLM().llm_model
-    print("LLM loaded")
-    yield
+app = FastAPI(title="RAG Inference Service")
 
-app = FastAPI(
-    title="RAG Inference Service",
-    lifespan=lifespan
-)
+llm = LLM().llm_model
+inference.set_llm(llm)
 
-from api.routes import query, health
 app.include_router(health.router)
-app.include_router(query.router)
+app.include_router(inference.router)

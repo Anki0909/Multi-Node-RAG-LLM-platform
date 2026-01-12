@@ -1,36 +1,34 @@
 from fastapi import APIRouter, HTTPException
-from api.schemas import QueryRequest, QueryResponse
+import os, requests
 
-from langchain_chroma import Chroma
-from vectorstore.chroma_client import get_chroma_client
+from embeddings.embedder import TextEmbedder
 from llm.prompt import PromptSetUp
-from state.app_state import state
 
 router = APIRouter(prefix="/query")
 
-@router.post("", response_model=QueryResponse)
-def query(req: QueryRequest):
+RAG_BACKEND_URL = os.getenv("RAG_BACKEND_URL", "http://rag-inference")
 
-    if state.llm is None:
-        raise HTTPException(status_code=500, detail="LLM not initialized")
+@router.post("")
+def query(question: str):
+    embedder = TextEmbedder()
+    vector_db = embedder.get_vector_store()
 
-    chroma_client = get_chroma_client()
+    docs = vector_db.similarity_search(question, k=4)
+    context = "\n\n".join([d.page_content for d in docs])
 
-    vector_db = Chroma(
-        client=chroma_client,
-        collection_name="documents",
-        embedding_function=None
+    prompt = PromptSetUp().generate_prompt()
+
+    resp = requests.post(
+        f"{RAG_BACKEND_URL}/generate",
+        json={
+            "prompt": prompt,
+            "context": context,
+            "question": question
+        },
+        timeout=120
     )
 
-    docs = vector_db.similarity_search(req.query, k=4)
-    context = "\n".join(d.page_content for d in docs)
+    if resp.status_code != 200:
+        raise HTTPException(status_code=500, detail="Inference failed")
 
-    prompter = PromptSetUp()
-    prompt = prompter.generate_prompt(context=context, question=req.query)
-
-    answer = state.llm(prompt)
-
-    return {
-        "query": req.query,
-        "answer": answer
-    }
+    return resp.json()
