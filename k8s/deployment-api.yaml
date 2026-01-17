@@ -15,12 +15,19 @@ spec:
     spec:
       nodeSelector:
         rag-role: edge
+      terminationGracePeriodSeconds: 120
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: rag-api
         image: rag-api:v0.5-arm64
         imagePullPolicy: Never
         command: ["uvicorn"]
-        args: ["api.main_ingest:app", "--host", "0.0.0.0", "--port", "8000"]
+        args: 
+        - "api.main_ingest:app"
+        - "--host=0.0.0.0"
+        - "--port=8000"
+        - "--lifespan=off"
         ports:
         - containerPort: 8000
         volumeMounts:
@@ -53,7 +60,7 @@ spec:
             memory: "512Mi"
           limits:
             cpu: "1"
-            memory: "1Gi"
+            memory: "2Gi"
       volumes:
       - name: hf-models
         persistentVolumeClaim:

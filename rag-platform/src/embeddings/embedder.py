@@ -1,21 +1,29 @@
-from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
+import os
 
 class TextEmbedder:
     def __init__(self):
-        print("Initializing embedder")
-
-        self.embedding_model = HuggingFaceEmbeddings(
-            model_name="thenlper/gte-small"
+        model_path = os.getenv(
+            "HF_MODEL_PATH",
+            "/data/hf-models/thenlper/gte-small"
         )
 
-        self.vector_db = Chroma(
-            persist_directory="/data/vector-db",
-            embedding_function=self.embedding_model
+        print(f"🔹 Loading embedding model from: {model_path}")
+
+        self.embedding_model = HuggingFaceEmbeddings(
+            model_name=model_path,
+            model_kwargs={"local_files_only": True}
         )
 
         print("Embedder ready")
 
     def add_documents(self, documents):
-        self.vector_db.add_documents(documents)
-        return self.vector_db
+        from langchain_chroma import Chroma
+
+        vector_db = Chroma.from_documents(
+            documents=documents,
+            embedding=self.embedding_model,
+            persist_directory=os.getenv("VECTOR_DB_PATH", "/data/vector-db"),
+            collection_name="documents",
+        )
+        return vector_db
