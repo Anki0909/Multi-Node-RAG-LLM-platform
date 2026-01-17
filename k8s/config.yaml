@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: rag-config
-  namespace: rag-platform
-data:
-  MODEL_PATH: /models/model.gguf
