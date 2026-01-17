@@ -1,21 +1,29 @@
-# Converts text chunks into embedding
-import os
-from time import time
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-
-HF_HOME = os.getenv("HF_HOME", "/data/hf-models")
+import os
 
 class TextEmbedder:
     def __init__(self):
-        self.embedding_model = HuggingFaceEmbeddings(
-            model_name="thenlper/gte-small",
-            cache_folder=HF_HOME
+        model_path = os.getenv(
+            "HF_MODEL_PATH",
+            "/data/hf-models/thenlper/gte-small"
         )
 
-    def create_embedding(self, texts):
-        print("INFO: Creating embeddings...")
-        start = time()
-        db = FAISS.from_documents(texts, self.embedding_model)
-        print(f"INFO: Text embedding completed in {time() - start} seconds.")
-        return db
+        print(f"🔹 Loading embedding model from: {model_path}")
+
+        self.embedding_model = HuggingFaceEmbeddings(
+            model_name=model_path,
+            model_kwargs={"local_files_only": True}
+        )
+
+        print("Embedder ready")
+
+    def add_documents(self, documents):
+        from langchain_chroma import Chroma
+
+        vector_db = Chroma.from_documents(
+            documents=documents,
+            embedding=self.embedding_model,
+            persist_directory=os.getenv("VECTOR_DB_PATH", "/data/vector-db"),
+            collection_name="documents",
+        )
+        return vector_db

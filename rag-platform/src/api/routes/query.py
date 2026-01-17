@@ -1,31 +1,34 @@
 from fastapi import APIRouter, HTTPException
-from api.schemas import QueryRequest, QueryResponse
+import os, requests
 
-from llm.model import LLM
+from embeddings.embedder import TextEmbedder
 from llm.prompt import PromptSetUp
-from retrieval.manual_rag import ManualRAG
-from state.app_state import state
-from vectorstore.loader import load_vector_db
 
 router = APIRouter(prefix="/query")
 
-@router.post("", response_model=QueryResponse)
-def query(req: QueryRequest):
-    if state.llm is None:
-        state.llm = LLM().llm_model
+RAG_BACKEND_URL = os.getenv("RAG_BACKEND_URL", "http://rag-inference")
 
-    vector_db = load_vector_db()
-    if vector_db is None:
-        raise HTTPException(status_code=400, detail="No document ingested")
-    
-    prompter = PromptSetUp()
-    prompt = prompter.generate_prompt()
+@router.post("")
+def query(question: str):
+    embedder = TextEmbedder()
+    vector_db = embedder.get_vector_store()
 
-    rag = ManualRAG(
-        llm = state.llm, 
-        vector_db = vector_db,
-        prompt = prompt
+    docs = vector_db.similarity_search(question, k=4)
+    context = "\n\n".join([d.page_content for d in docs])
+
+    prompt = PromptSetUp().generate_prompt()
+
+    resp = requests.post(
+        f"{RAG_BACKEND_URL}/generate",
+        json={
+            "prompt": prompt,
+            "context": context,
+            "question": question
+        },
+        timeout=120
     )
 
-    answer = rag.generate(req.query)
-    return {"query": req.query, "answer": answer}
+    if resp.status_code != 200:
+        raise HTTPException(status_code=500, detail="Inference failed")
+
+    return resp.json()

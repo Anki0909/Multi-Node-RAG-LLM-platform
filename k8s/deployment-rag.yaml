@@ -14,11 +14,13 @@ spec:
         app: rag-inference
     spec:
       nodeSelector:
-        rag-role: compute
+        rag-role: inference
       containers:
         - name: rag-inference
           image: rag-inference:v0.5-amd64
           imagePullPolicy: Never
+          command: ["uvicorn"]
+          args: ["api.main_inference:app", "--host", "0.0.0.0", "--port", "8000"]
           ports:
             - containerPort: 8000
           envFrom:
@@ -33,8 +35,18 @@ spec:
               memory: "8Gi"
           volumeMounts:
             - name: llm-models
-              mountPath: /models
+              mountPath: /data/llm-models
+            - name: vector-db
+              mountPath: /data/vector-db
+          env:
+            - name: VECTOR_DB_PATH
+              value: /data/vector-db
+            - name: MODEL_PATH
+              value: /data/llm-models/model.gguf
       volumes:
         - name: llm-models
           persistentVolumeClaim:
             claimName: llm-models-pvc
+        - name: vector-db
+          persistentVolumeClaim:
+            claimName: vector-db-pvc
