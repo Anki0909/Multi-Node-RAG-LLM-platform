@@ -5,3 +5,5 @@ __pycache__/
 *.gguf
 _archive/
 gte-small/
+data/
+rag-platform/
