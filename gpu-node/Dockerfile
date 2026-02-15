@@ -38,9 +38,10 @@ RUN ln -sf /usr/local/bin/llama-cli /usr/local/bin/llama || true && \
     chmod +x /usr/local/bin/llama* 2>/dev/null || true
 
 # Copy all CUDA and llama.cpp shared libraries from builder
-COPY --from=builder /usr/local/cuda/lib64/libcuda.so* /usr/local/cuda/lib64/
+# COPY --from=builder /usr/local/cuda/lib64/libcuda.so* /usr/local/cuda/lib64/
 COPY --from=builder /app/llama.cpp/build/bin/*.so* /usr/local/lib/
-
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/llama.conf && \
+    ldconfig
 RUN ldconfig
 
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH

@@ -1,6 +1,3 @@
-from .embedder import embed_texts
-from .vector_store import VectorStore
-
 class Retriever:
     def __init__(self, embedder, vector_store):
         self.embedder = embedder

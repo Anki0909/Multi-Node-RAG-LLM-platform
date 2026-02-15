@@ -1,95 +1,99 @@
-import time
-from fastapi import FastAPI, HTTPException
-from fastapi.concurrency import run_in_threadpool
-from schemas import InferenceRequest, InferenceResponse
-from router import run_inference#, build_prompt
-from gpu_client import generate_completion
+from fastapi import FastAPI
+import requests
+import os
+import re
 
+from rag.store import VectorStore
 from rag.loader import load_documents
-from rag.chunker import TextChunker
-from rag.vector_store import VectorStore
-from rag.embedder import embed_texts, Embedder
-from rag.retriever import Retriever
 
-EMBEDDING_DIM = 384
-MAX_PROMPT_CHARS = 6000
+GPU_LLM_ENDPOINT = os.getenv("GPU_LLM_ENDPOINT")
 
-app = FastAPI(
-    title="CPU Inference Router",
-    version="2.1",
-    description="Phase-3 CPU → GPU RAG Orchestrator",
-)
+app = FastAPI()
+store = VectorStore()
 
-chunker = TextChunker(chunk_size=512, overlap=64)
-embedder = Embedder(dim=EMBEDDING_DIM)
-vector_store = VectorStore(dim=EMBEDDING_DIM)
-retriever = Retriever(embedder, vector_store)
+def compress_context(contexts, query, max_sentences=5):
+    """
+    Simple keyword-based context compression.
+    Keeps only most relevant sentences.
+    """
+    query_words = set(query.lower().split())
+    scored_sentences = []
+
+    for ctx in contexts:
+        sentences = re.split(r'(?<=[.!?]) +', ctx)
+
+        for s in sentences:
+            score = sum(1 for w in query_words if w in s.lower())
+            if score > 0:
+                scored_sentences.append((s, score))
+
+    scored_sentences.sort(key=lambda x: x[1], reverse=True)
+
+    return "\n".join([s for s, _ in scored_sentences[:max_sentences]])
+
+@app.on_event("startup")
+def startup():
+    docs = load_documents()
+    store.build(docs)
+
+from pydantic import BaseModel
+
+class InferRequest(BaseModel):
+    query: str
+
+@app.post("/infer")
+def infer(req: InferRequest):
+    query = req.query
+
+    # contexts = "\n\n".join(store.search(query))
+    semantic = store.search(query, k=3)
+    keyword = store.keyword_search(query, k=3)
+
+    retrieved = list(dict.fromkeys(semantic + keyword))
+    raw_contexts = compress_context(retrieved, query)
+
+    if not isinstance(raw_contexts, list):
+        raw_contexts = [str(raw_contexts)]
+
+    contexts = "\n---\n".join([
+        str(c).replace("\x00", " ").strip()
+        for c in raw_contexts
+    ])[:4000]
+
+
+    augmented_prompt = f"""
+        You are a precise technical assistant.
+
+        Answer the question ONLY using the context.
+        If possible, answer in 2-4 concise sentences.
+
+        Context:
+        {contexts}
+
+        Question:
+        {query}
+
+        Answer:
+        """.strip()
+
+    payload = {
+        "model":"qwen2.5-3b-instruct-q4_k_m.gguf",
+        "prompt": augmented_prompt,
+        "max_tokens": 128,
+        "temperature": 0.7,
+        "top_p": 0.9
+    }
+
+    print("PROMPT SIZE =", len(augmented_prompt))
+
+    print("DEBUG PAYLOAD =", payload)
+
+    resp = requests.post(GPU_LLM_ENDPOINT, json=payload, timeout=60)
+    resp.raise_for_status()
+
+    return resp.json()
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "device": "cpu-router"}
-
-@app.post("/documents/load")
-def load_docs():
-    docs = load_documents(
-        "/home/ankur/Documents/Multi-Node-RAG-LLM-platform/data/documents"
-    )
-
-    if not docs:
-        raise HTTPException(status_code=400, detail="No documents found")
-
-    chunks = []
-    for doc in docs:
-        chunks.append(chunker.chunk(doc))
-
-    embeddings = embedder.embed(chunks)
-    
-    vector_store.add(embeddings, docs)
-
-    return {
-        "status": "ok",
-        "documents_loaded": len(docs),
-        "number_of_chunks": len(chunks)
-    }
-
-@app.post("/infer", response_model=InferenceResponse)
-def infer(req: InferenceRequest):
-
-    retrieved_chunks = []
-
-    final_prompt = req.prompt
-
-    if req.use_rag:
-        retrieved_chunks = retriever.retrieve(req.prompt, top_k=req.top_k)
-        context_block = "\n".join(retrieved_chunks)
-
-        final_prompt = f"""
-            You are an assistant.
-
-            Use the context below to answer the question.
-
-            Context:
-            {context_block}
-
-            Question:
-            {req.prompt}
-            """.strip()
-
-    if len(final_prompt) > MAX_PROMPT_CHARS:
-        final_prompt = final_prompt[:MAX_PROMPT_CHARS]
-
-    gpu_result = generate_completion(final_prompt, max_tokens=256)
-
-    response_text = gpu_result["text"]
-    model_name = gpu_result["model"]
-
-    return {
-        "prompt": req.prompt,
-        "response": response_text,
-        "model": model_name,
-        "device": "gpu",
-        "latency_ms": gpu_result["latency_ms"],
-        "exit_code": gpu_result["exit_code"],
-        "use_rag": req.use_rag,
-        "retrieved_chunks": retrieved_chunks,
-        "error": gpu_result["error"],
-    }
+    return {"status": "ok"}

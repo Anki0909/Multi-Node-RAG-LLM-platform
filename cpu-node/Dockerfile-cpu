@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install Python deps
 COPY cpu-node/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --timeout 300 -r requirements.txt
 
 # Copy CPU app
 COPY cpu-node /app
