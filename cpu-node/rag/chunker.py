@@ -1,3 +1,4 @@
+# chunking only
 class TextChunker:
     def __init__(self, chunk_size=512, overlap=64):
         if overlap >= chunk_size:

@@ -1,8 +1,15 @@
-class Retriever:
-    def __init__(self, embedder, vector_store):
-        self.embedder = embedder
-        self.vector_store = vector_store
+# orchestration of hybrid retrieval
+from rag.reranker import Reranker
 
-    def retrieve(self, query: str, top_k=3):
-        query_emb = self.embedder.embed([query])
-        return self.vector_store.search(query_emb, top_k)
+reranker = Reranker()
+
+def hybrid_retrieve(store, query):
+
+    semantic = store.search_semantic(query, k=5)
+    keyword = store.keyword_search(query, k=3)
+
+    merged = list(dict.fromkeys(semantic + keyword))
+
+    reranked = reranker.rerank(query, merged, top_k=3)
+
+    return reranked
