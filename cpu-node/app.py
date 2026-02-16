@@ -4,7 +4,7 @@ import os
 
 from rag.store import VectorStore
 from rag.loader import load_documents
-from rag.retriever import hybrid_retrieve
+from rag.adaptive_retriever import adaptive_retrieve
 from rag.prompt import build_prompt
 
 GPU_LLM_ENDPOINT = os.getenv("GPU_LLM_ENDPOINT")
@@ -26,7 +26,7 @@ class InferRequest(BaseModel):
 def infer(req: InferRequest):
     query = req.query
 
-    contexts = hybrid_retrieve(store, query)
+    contexts = adaptive_retrieve(store, query)
 
     context_block = "\n---\n".join(contexts)
 
