@@ -2,16 +2,7 @@
 from pathlib import Path
 import pdfplumber
 
-def split_text(text, chunk_size=1000, overlap=200):
-    chunks = []
-    start = 0
-
-    while start < len(text):
-        end = start + chunk_size
-        chunks.append(text[start:end])
-        start += chunk_size - overlap
-
-    return chunks
+from rag.cleaner import TextCleaner
 
 def load_documents(path="data/documents"):
     docs = []
@@ -20,7 +11,9 @@ def load_documents(path="data/documents"):
     for file in base.glob("*"):
         try:
             if file.suffix in {".txt", ".md"}:
-                docs.append(file.read_text(encoding="utf-8", errors="ignore"))
+                cleaned = TextCleaner.clean(file.read_text(encoding="utf-8", errors="ignore"))
+                if cleaned:
+                    docs.append(cleaned)
 
             elif file.suffix == ".pdf":
                 with pdfplumber.open(file) as pdf:
@@ -44,11 +37,10 @@ def load_documents(path="data/documents"):
                     if len(text.strip()) < 200:
                         continue
 
-                    chunks = split_text(text)
+                    cleaned = TextCleaner.clean(text)
 
-                    for c in chunks:
-                        if len(c.strip()) > 200:
-                            docs.append(c)
+                    if cleaned:
+                        docs.append(cleaned)
 
         except Exception as e:
             print(f"[WARN] Failed to load {file.name}: {e}")

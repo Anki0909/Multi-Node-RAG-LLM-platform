@@ -3,13 +3,43 @@ from rag.reranker import Reranker
 
 reranker = Reranker()
 
-def hybrid_retrieve(store, query):
+def merge_results(semantic, keyword):
+    merged = {}
+    
+    for r in semantic + keyword:
+        text = r["text"]
 
-    semantic = store.search_semantic(query, k=5)
-    keyword = store.keyword_search(query, k=3)
+        # keep BEST score if duplicate
+        if text not in merged or r["score"] < merged[text]["score"]:
+            merged[text] = r
 
-    merged = list(dict.fromkeys(semantic + keyword))
+    return list(merged.values())
 
-    reranked = reranker.rerank(query, merged, top_k=3)
+def hybrid_retrieve(store, query, semantic_k=5, keyword_k=3, rerank_top_k=3):
 
-    return reranked
+    semantic = store.search_semantic(query, k=semantic_k)
+    keyword = store.keyword_search(query, k=keyword_k)
+
+    merged = merge_results(semantic, keyword)
+
+    reranked = reranker.rerank(query, merged, top_k=rerank_top_k)
+
+    confidence = compute_confidence(reranked)
+
+    return {
+        "results": reranked,
+        "confidence": confidence
+    }
+
+
+def compute_confidence(results):
+    if not results:
+        return 0.0
+
+    avg_score = sum(r["score"] for r in results) / len(results)
+
+    # FAISS L2 distance:
+    # lower = better
+    confidence = 1 / (1 + avg_score)
+
+    return confidence

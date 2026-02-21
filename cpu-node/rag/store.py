@@ -39,9 +39,32 @@ class VectorStore:
 
         scored.sort(key=lambda x: x[1], reverse=True)
 
-        return [t for t, _ in scored[:k]]
+        return [
+                {"text": t, "score": float(-s)}   # higher keyword score = better
+                for t, s in scored[:k]
+                ]
 
     def search_semantic(self, query, k=5):
+        if isinstance(query, list):
+            query = " ".join(map(str, query))
+
+        if isinstance(query, dict):
+            query = query.get("query", "")
+
+        query = str(query)
+
         q_emb = model.encode([query])
+
         distances, indices = self.index.search(q_emb, k)
-        return [self.texts[i] for i in indices[0]]
+
+        results = []
+        for score, idx in zip(distances[0], indices[0]):
+            if idx == -1:
+                continue
+
+            results.append({
+                "text": self.texts[idx],
+                "score": float(score)
+            })
+
+        return results

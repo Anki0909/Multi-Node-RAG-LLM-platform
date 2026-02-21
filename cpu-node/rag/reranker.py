@@ -7,14 +7,15 @@ class Reranker:
             "cross-encoder/ms-marco-MiniLM-L-6-v2"
         )
 
-    def rerank(self, query, candidates, top_k=2):
-        pairs = [[query, c] for c in candidates]
+    def rerank(self, query, docs, top_k=3):
+        if not docs:
+            return []
+
+        pairs = [(query, d["text"]) for d in docs]
         scores = self.model.predict(pairs)
+        for d, s in zip(docs, scores):
+            d["score"] = float(s)
 
-        ranked = sorted(
-            zip(candidates, scores),
-            key=lambda x: x[1],
-            reverse=True
-        )
+        docs.sort(key=lambda x: x["score"], reverse=True)
 
-        return [x[0] for x in ranked[:top_k]]
+        return docs[:top_k]
