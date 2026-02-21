@@ -1,6 +1,7 @@
 import os
 import requests
 from rag.prompt import build_prompt
+from shared import cache
 
 GPU_LLM_ENDPOINT = os.getenv("GPU_LLM_ENDPOINT")
 
@@ -13,6 +14,10 @@ class RAGPipeline:
 
 
     def run(self, query):
+        cached = cache.get(query)
+        if cached is not None:
+            return cached
+        
         expanded_queries = self.expander.expand(query)
 
         all_context = []
@@ -37,7 +42,15 @@ class RAGPipeline:
         for key, value in payload.items():
             print(key, ": ", value)
 
-        resp = requests.post(GPU_LLM_ENDPOINT, json=payload, timeout=60)
-        resp.raise_for_status()
+        try:
+            resp = requests.post(GPU_LLM_ENDPOINT, json=payload, timeout=60)
+            resp.raise_for_status()
+        except Exception as e:
+            return {
+                "error": "LLM unavailable",
+                "details": str(e)
+            }
+        
+        cache.set(query, resp.json())
 
         return resp.json()

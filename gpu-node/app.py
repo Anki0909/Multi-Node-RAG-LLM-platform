@@ -18,6 +18,10 @@ class InferenceResponse(BaseModel):
     tokens: int
     latency_ms: int
 
+@app.get("/health")
+def health():
+    return {'status': 'ok'}
+
 @app.post("/infer", response_model=InferenceResponse)
 def infer(req: InferenceRequest):
     start = time.time()
