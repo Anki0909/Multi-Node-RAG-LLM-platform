@@ -1,5 +1,6 @@
 import os
 import requests
+from fastapi import HTTPException
 from rag.prompt import build_prompt
 from shared import cache
 
@@ -51,6 +52,11 @@ class RAGPipeline:
                 "details": str(e)
             }
         
-        cache.set(query, resp.json())
+        resp_json = resp.json()
 
-        return resp.json()
+        if "choices" not in resp_json:
+            raise HTTPException(500, "Invalid LLM response")
+        
+        cache.set(query, resp_json)
+
+        return resp_json
