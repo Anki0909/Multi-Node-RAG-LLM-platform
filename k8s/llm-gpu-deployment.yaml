@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-gpu
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-gpu
+  template:
+    metadata:
+      labels:
+        app: llm-gpu
+    spec:
+      containers:
+      - name: llama
+        image: rag-llm:cuda
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: rag-data
+          mountPath: /mnt/data/rag
+      volumes:
+      - name: rag-data
+        hostPath:
+          path: /mnt/data/rag
+          type: Directory

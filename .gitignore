@@ -3,3 +3,7 @@ test_venv/
 __pycache__/
 *.pyc
 *.gguf
+_archive/
+gte-small/
+data/
+rag-platform/

@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+requests
+pydantic
+numpy
+faiss-cpu
+pdfplumber
+sentence-transformers
+torch --index-url https://download.pytorch.org/whl/cpu

@@ -1,0 +1,47 @@
+services:
+
+  gpu-llm:
+    build:
+      context: ./gpu-node
+      dockerfile: Dockerfile
+    gpus: all
+    ports:
+      - "8081:8000"
+    volumes:
+      - /mnt/data/rag/models:/models:ro
+    environment:
+      MODEL_PATH: /models
+    command:
+      - /usr/local/bin/llama-server
+      - --model
+      - /models/qwen2.5-3b-instruct-q4_k_m.gguf
+      - --n-gpu-layers
+      - "20"
+      - --ctx-size
+      - "2048"
+      - --batch-size
+      - "128"
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+    restart: unless-stopped
+
+  cpu-api:
+    build:
+      context: .
+      dockerfile: cpu-node/Dockerfile-cpu
+    ports:
+      - "8080:8080"
+    depends_on: 
+      - gpu-llm
+    environment:
+      GPU_LLM_ENDPOINT: http://gpu-llm:8000/v1/completions
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+    volumes:
+      - ./data:/app/data
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

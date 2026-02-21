@@ -1,7 +1,0 @@
-__pycache__/
-*.pyc
-.git
-.gitignore
-test_venv/
-*.gguf
-.cache/
