@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-llama
+  namespace: rag-system
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gpu-llama
+  template:
+    metadata:
+      labels:
+        app: gpu-llama
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      nodeSelector:
+        rag.node.role: gpu
+        kubernetes.io/arch: amd64
+      containers:
+        - name: llama
+          image: ankur7pute/multi-node-rag-llm:gpu-amd64-v2
+          imagePullPolicy: Always
+          command: ["/usr/local/bin/llama-server"]
+          args:
+            - "--model"
+            - "/models/qwen2.5-3b-instruct-q4_k_m.gguf"
+            - "--n-gpu-layers"
+            - "20"
+            - "--ctx-size"
+            - "2048"
+            - "--batch-size"
+            - "128"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "8080"
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+              memory: "6Gi"
+            requests:
+              memory: "4Gi"
+          volumeMounts:
+            - name: model-volume
+              mountPath: /models
+      volumes:
+        - name: model-volume
+          hostPath:
+            path: /mnt/data/rag/models
+            type: Directory
