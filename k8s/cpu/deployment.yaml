@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-api
+  namespace: rag-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cpu-api
+  template:
+    metadata:
+      labels:
+        app: cpu-api
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      nodeSelector:
+        rag.node.role: cpu
+        kubernetes.io/arch: arm64
+      containers:
+        - name: cpu-api
+          image: ankur7pute/multi-node-rag-llm:cpu-multiarch-v3
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: cpu-config
+          env:
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+          volumeMounts:
+            - name: rag-documents
+              mountPath: /app/data/documents
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              memory: "4Gi"
+            requests:
+              memory: "2Gi"
+      volumes:
+        - name: rag-documents
+          hostPath:
+            path: /mnt/data/rag/documents
+            type: DirectoryOrCreate
+        - name: hf-cache
+          hostPath:
+            path: /mnt/data/rag/huggingface-cache/huggingface
+            type: DirectoryOrCreate

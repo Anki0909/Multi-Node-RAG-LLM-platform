@@ -14,7 +14,7 @@ RUN git clone https://github.com/ggerganov/llama.cpp.git && \
     cd llama.cpp && \
     cmake -B build \
       -DGGML_CUDA=ON \
-      -DCMAKE_CUDA_ARCHITECTURES="60;61;70;75;80;86;89;90" \
+      -DCMAKE_CUDA_ARCHITECTURES="50;52;60;61;70;75;80;86;89;90" \
       -DCMAKE_SHARED_LINKER_FLAGS="-L/usr/local/cuda/lib64 -lcuda" \
       -DCMAKE_EXE_LINKER_FLAGS="-L/usr/local/cuda/lib64 -lcuda" && \
     cmake --build build -j$(nproc)

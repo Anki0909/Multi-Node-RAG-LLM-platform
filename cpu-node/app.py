@@ -25,13 +25,17 @@ pipeline = RAGPipeline(
 
 @app.on_event("startup")
 def startup():
-    docs = load_documents()
+    try:
+        docs = load_documents()
 
-    chunks = []
-    for d in docs:
-        chunks.extend(chunker.chunk(d))
+        chunks = []
+        for d in docs:
+            chunks.extend(chunker.chunk(d))
 
-    store.build(chunks)
+        store.build(chunks)
+        print(f"[INFO] RAG store initialized with {len(chunks)} chunks")
+    except Exception as e:
+        print(f"[WARN] Startup indexing skipped: {e}")
 
 from pydantic import BaseModel
 

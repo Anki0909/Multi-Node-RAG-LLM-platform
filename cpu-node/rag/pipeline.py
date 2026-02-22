@@ -6,6 +6,25 @@ from shared import cache
 
 GPU_LLM_ENDPOINT = os.getenv("GPU_LLM_ENDPOINT")
 
+def _normalize_llm_response(resp_json):
+    # OpenAI-compatible response from /v1/completions
+    if isinstance(resp_json, dict) and "choices" in resp_json:
+        return resp_json
+
+    # llama.cpp /completion style response
+    if isinstance(resp_json, dict):
+        if "content" in resp_json:
+            return {"choices": [{"text": str(resp_json.get("content", ""))}]}
+        if "response" in resp_json:
+            return {"choices": [{"text": str(resp_json.get("response", ""))}]}
+        if "text" in resp_json:
+            return {"choices": [{"text": str(resp_json.get("text", ""))}]}
+
+    if isinstance(resp_json, str):
+        return {"choices": [{"text": resp_json}]}
+
+    raise HTTPException(500, "Invalid LLM response")
+
 class RAGPipeline:
     def __init__(self, store, retriever, expander, compressor):
         self.store = store
@@ -53,10 +72,6 @@ class RAGPipeline:
             }
         
         resp_json = resp.json()
-
-        if "choices" not in resp_json:
-            raise HTTPException(500, "Invalid LLM response")
-        
-        cache.set(query, resp_json)
-
-        return resp_json
+        normalized = _normalize_llm_response(resp_json)
+        cache.set(query, normalized)
+        return normalized
